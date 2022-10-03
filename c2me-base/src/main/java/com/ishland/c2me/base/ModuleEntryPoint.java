@@ -34,6 +34,8 @@ public class ModuleEntryPoint {
             .comment("\n The expression for the default value of global executor parallelism. \n This is used when the parallelism isn't overridden.")
             .getString(DEFAULT_EXPRESSION, DEFAULT_EXPRESSION);
 
+    public static final int defaultParallelism;
+
     private static int tryEvaluateExpression(String expression) {
         return (int) Math.max(1,
                 new ExpressionBuilder(expression)
@@ -77,43 +79,44 @@ public class ModuleEntryPoint {
             value = tryEvaluateExpression(DEFAULT_EXPRESSION);
         }
 
+        defaultParallelism = value;
         globalExecutorParallelism = new ConfigSystem.ConfigAccessor()
                 .key("globalExecutorParallelism")
                 .comment("Configures the parallelism of global executor")
                 .getLong(value, value, ConfigSystem.LongChecks.THREAD_COUNT);
     }
 
-    public static int getDefaultGlobalExecutorParallelism() {
-        return Math.max(1, Math.min(getDefaultParallelismCPU(), getDefaultParallelismHeap()));
-    }
-
-    private static int getDefaultParallelismCPU() {
-        if (PlatformDependent.isWindows()) {
-            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2)) + defaultParallelismEnvTypeOffset();
-        } else {
-            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2)) + defaultParallelismEnvTypeOffset();
-        }
-    }
-
-    private static int defaultParallelismEnvTypeOffset() {
-        return isClientSide() ? -2 : 0;
-    }
-
-    private static boolean isClientSide() {
-        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
-    }
-
-    private static int getDefaultParallelismHeap() {
-        if (PlatformDependent.isJ9Jvm()) {
-            return (int) ((memoryInGiB() + (isClientSide() ? -0.6 : -0.2)) / 0.5) + defaultParallelismEnvTypeOffset();
-        } else {
-            return (int) ((memoryInGiB() + (isClientSide() ? -1.2 : -0.6)) / 1.2) + defaultParallelismEnvTypeOffset();
-        }
-    }
-
-    private static double memoryInGiB() {
-        return Runtime.getRuntime().maxMemory() / 1024.0 / 1024.0 / 1024.0;
-    }
+//    public static int getDefaultGlobalExecutorParallelism() {
+//        return Math.max(1, Math.min(getDefaultParallelismCPU(), getDefaultParallelismHeap()));
+//    }
+//
+//    private static int getDefaultParallelismCPU() {
+//        if (PlatformDependent.isWindows()) {
+//            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2)) + defaultParallelismEnvTypeOffset();
+//        } else {
+//            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2)) + defaultParallelismEnvTypeOffset();
+//        }
+//    }
+//
+//    private static int defaultParallelismEnvTypeOffset() {
+//        return isClientSide() ? -2 : 0;
+//    }
+//
+//    private static boolean isClientSide() {
+//        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
+//    }
+//
+//    private static int getDefaultParallelismHeap() {
+//        if (PlatformDependent.isJ9Jvm()) {
+//            return (int) ((memoryInGiB() + (isClientSide() ? -0.6 : -0.2)) / 0.5) + defaultParallelismEnvTypeOffset();
+//        } else {
+//            return (int) ((memoryInGiB() + (isClientSide() ? -1.2 : -0.6)) / 1.2) + defaultParallelismEnvTypeOffset();
+//        }
+//    }
+//
+//    private static double memoryInGiB() {
+//        return Runtime.getRuntime().maxMemory() / 1024.0 / 1024.0 / 1024.0;
+//    }
 
 
 }
